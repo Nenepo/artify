@@ -1,99 +1,53 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import gsap from "gsap";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import SplashScreen from "@/components/SplashScreen";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 const Home = () => {
-  const barsRef = useRef<HTMLDivElement[]>([]);
-  const arrowRef = useRef<HTMLDivElement>(null);
+  const [splashScreen, setSplashScreen] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Splash screen timer
   useEffect(() => {
-    const tl = gsap.timeline();
+    const timeout = setTimeout(() => {
+      setSplashScreen(false);
+    }, 4000);
 
-    // Bars animation
-    tl.fromTo(
-      barsRef.current,
-      { x: -100, opacity: 0,  },
-      {
-        x: 0,
-        opacity: 1,
-        duration: 1.5,
-        ease: "power3.out",
-        stagger: 0.3,
-      }
-    ).to(
-      barsRef.current,
-      {
-        duration: 0.5,
-        ease: "power1.inOut",
-        yoyo: true,
-        repeat: 1,
-      },
-      "-=0.5"
-    );
+    return () => clearTimeout(timeout);
+  }, []);
 
-    // Arrow entrance and exit
-    tl.fromTo(
-      arrowRef.current,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 0.8,
-        ease: "power2.out",
-      }
-    ).to(
-      arrowRef.current,
-      {
-        x: 100,
-        opacity: 0,
-        duration: 1,
-        ease: "power2.inOut",
-        onComplete: () => {
-          void router.push("/login");
-        },
-      },
-      "+=1"
-    );
-  }, [router]);
+  // Firebase auth state listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
+    });
 
+    return () => unsubscribe();
+  }, []);
+
+  // Redirect if not logged in
+useEffect(() => {
+  if (!splashScreen && !loading && !user) {
+    router.push("/login");
+  }
+}, [splashScreen, loading, user, router]);
+
+
+  // Show splash while loading or during animation
+  if (splashScreen || loading) {
+    return <SplashScreen />;
+  }
+
+  // User is logged in
   return (
-    <section
-      aria-hidden={true}
-      className="bg-blue h-screen w-screen overflow-hidden relative flex justify-center items-center z-[-1]"
-    >
-      {/* Bars */}
-      <div>
-        <div
-          ref={(el) => {
-            if (el) barsRef.current[0] = el;
-          }}
-          className="w-[191px] h-[1351px] z-20 absolute left-[-50px] top-[-140px] rotate-[30deg] bg-bar  blur-[10px] opacity-80  hidden md:block"
-        ></div>
-        <div
-          ref={(el) => {
-            if (el) barsRef.current[1] = el;
-          }}
-          className="w-[191px] h-[1351px] absolute top-[-140px] left-[300px] rotate-[30deg] bg-bar  blur-[10px] opacity-80 backdrop-blur-3xl hidden md:block"
-        ></div>
-        <div
-          ref={(el) => {
-            if (el) barsRef.current[2] = el;
-          }}
-          className="w-[191px] h-[1351px] absolute top-[-140px] right-[100px] rotate-[30deg] bg-bar  opacity-80 blur-[10px] "
-        ></div>
-      </div>
-
-      {/* Arrow */}
-      <div ref={arrowRef} className="flex items-center z-10">
-        {/* Long line */}
-        <div className="h-1 w-30 bg-white rounded backdrop-blur-lg" />
-
-        {/* Arrowhead */}
-        <div className="w-4 h-4 border-r-4 border-t-4 rotate-45 border-white" />
-      </div>
+    <section>
+      <h1>Welcome to the Home Page</h1>
     </section>
   );
 };
