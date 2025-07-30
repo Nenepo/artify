@@ -1,26 +1,26 @@
-// // middleware.ts
-// import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getAuth } from "firebase-admin/auth";
+import { initializeApp, cert } from "firebase-admin/app";
 
-// const PUBLIC_PATHS = ["/login", "/register", "/"];
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!);
 
-// export function middleware(request: NextRequest) {
-//   const { pathname } = request.nextUrl;
+try {
+  initializeApp({
+    credential: cert(serviceAccount),
+  });
+} catch (e) {}
 
-//   // Allow public routes
-//   if (PUBLIC_PATHS.includes(pathname)) {
-//     return NextResponse.next();
-//   }
+export async function middleware(req: NextRequest) {
+  const sessionCookie = req.cookies.get("session")?.value || "";
+  try {
+    await getAuth().verifySessionCookie(sessionCookie, true);
+    return NextResponse.next();
+  } catch {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+}
 
-//   const token = request.cookies.get("__session");
-
-//   // If no token, redirect to login
-//   if (!token) {
-//     return NextResponse.redirect(new URL("/login", request.url));
-//   }
-
-//   return NextResponse.next(); // Allow access
-// }
-
-// export const config = {
-//   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"], // all routes except static
-// };
+export const config = {
+  matcher: ["/dashboard", "/profile", "/some-private-route"], // your protected pages
+};
