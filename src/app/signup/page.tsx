@@ -10,17 +10,16 @@ import { auth } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { checkIfEmailExists } from "@/utility/utility";
-import FormInput from "@/components/FormInput";
 import SignupForm from "@/components/SignupForm";
 import OTP from "@/components/OTP";
 import { generateOTP, sendOtpToEmail } from "@/lib/otp";
+import toast from "react-hot-toast";
 
 function Signup() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentScreen, setCurrentScreen] = useState(1);
   const [generatedOtp, setGeneratedOtp] = useState("");
@@ -33,26 +32,25 @@ function Signup() {
 
   const handleContinue = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
     const normalizedEmail = email.toLowerCase().trim();
 
     if (!normalizedEmail.includes("@") || normalizedEmail === "") {
-      setError("Invalid email format.");
+      toast.error("Invalid email format.");
       setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      toast.error("Password must be at least 6 characters.");
       setIsLoading(false);
       return;
     }
 
     const exists = await checkIfEmailExists(normalizedEmail);
     if (exists) {
-      setError("Email already registered. Try logging in.");
+      toast.error("Email already registered. Try logging in.");
       setIsLoading(false);
       return;
     }
@@ -63,7 +61,7 @@ function Signup() {
       setGeneratedOtp(otpCode);
       setCurrentScreen(2);
     } catch (err: any) {
-      setError("Failed to send OTP.");
+      toast.error("Failed to send OTP.");
     } finally {
       setIsLoading(false);
     }
@@ -85,11 +83,13 @@ function Signup() {
         verifiedAt: new Date(),
       });
       sessionStorage.removeItem("signupScreen");
+      // sessionStorage.setItem("isLoggedIn", "true");
 
-      sessionStorage.setItem("isLoggedIn", "true");
-      router.push("/dashboard");
+      // router.push("/dashboard");
     } catch (err: any) {
-      setError("Account creation failed. Try again.");
+      console.error("Signup error:", err.code, err.message);
+
+      toast.error("Account creation failed. Try again.");
       setCurrentScreen(1);
     } finally {
       setIsLoading(false);
@@ -120,7 +120,6 @@ function Signup() {
           changeInputValue={changeInputValue}
           continueToOtp={handleContinue}
           password={password}
-          error={error}
           isLoading={isLoading}
         />
       ),

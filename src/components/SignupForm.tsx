@@ -8,7 +8,6 @@ type SignupProps = {
   email: string;
   changeInputValue: (e: React.ChangeEvent<HTMLInputElement>) => void;
   password: string;
-  error: string;
   isLoading: boolean;
 };
 
@@ -16,7 +15,6 @@ function SignupForm({
   email,
   changeInputValue,
   password,
-  error,
   isLoading,
   continueToOtp,
 }: SignupProps) {
@@ -66,9 +64,9 @@ function SignupForm({
                   Password must be up to 6{" "}
                 </p>
               )}
-              <p className="text-start text-red-800 text-[10px] animate-pulse">
+              {/* <p className="text-start text-red-800 text-[10px] animate-pulse">
                 {error}
-              </p>
+              </p> */}
             </div>
           </div>
           <div className="flex gap-4 flex-col w-full">

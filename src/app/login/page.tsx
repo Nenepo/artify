@@ -10,6 +10,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { query, where, getDocs, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import toast from "react-hot-toast";
 
 function LoginScreen() {
   const router = useRouter();
@@ -17,7 +18,7 @@ function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  // const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const changeInputValue = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,18 +29,17 @@ function LoginScreen() {
 
   const login = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
 
     const normalizedEmail = email.toLowerCase().trim();
 
     if (!normalizedEmail.includes("@")) {
-      setError("Invalid email format.");
+      toast.error("Invalid email format.");
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+     toast.error("Password must be at least 6 characters.");
       return;
     }
 
@@ -49,7 +49,7 @@ function LoginScreen() {
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        setError("No user found with this email. Redirecting to signup...");
+        toast.error("No user found with this email. Redirecting to signup...");
         setTimeout(() => {
           router.push("/signup");
         }, 2000);
@@ -75,7 +75,7 @@ function LoginScreen() {
       setLoading(false);
       router.push("/");
     } catch (err: any) {
-      setError("Invalid credentials. Please try again.");
+      toast.error("Invalid credentials. Please try again.");
       console.error(err.message);
     }
   };
@@ -124,9 +124,9 @@ function LoginScreen() {
                     showPassword={showPassword}
                     togglePassword={() => setShowPassword(!showPassword)}
                   />
-                  <p className="text-start text-red-800 text-[10px] animate-pulse">
+                  {/* <p className="text-start text-red-800 text-[10px] animate-pulse">
                     {error}
-                  </p>
+                  </p> */}
                 </div>
                 <Link
                   className="underline text-end text-white"
